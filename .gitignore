@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# VSCode
+.vscode/
+
+# MacOS
+.DS_Store
+
+# PyCharm
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyTorch Models
+*.pt
+*.pth
+
+# YOLO specific
+runs/
