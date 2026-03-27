@@ -1,7 +1,17 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+
+	"github.com/Blue-Onion/MahilAi/handler/config"
+)
 
 func main(){
-	fmt.Println("Hello")
+	camera,err:=config.LoadConfig()
+	if err!=nil{
+		log.Fatal(err.Error())
+	}
+	fmt.Println(camera)
+	
 }
