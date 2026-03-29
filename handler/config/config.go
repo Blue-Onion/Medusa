@@ -1,18 +1,22 @@
 package config
 
 import (
-
+	"fmt"
+	"log"
 	"os"
 
 	"gopkg.in/yaml.v3"
 )
 
+
+
 type Camera struct {
-	Name   string
-	Source interface{}
+	Name string `yaml:"name"`
+	Source  string `yaml:"soruce"`
 }
 type Config struct {
 	Cameras []Camera
+	
 }
 type Event struct {
 	Camera     string
@@ -63,4 +67,21 @@ func LoadConfig() (*Config, error) {
 	}
 
 	return cameras, nil
+}
+func ShowConfig() {
+	var cfg Config
+
+	data, err := os.ReadFile("config.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = yaml.Unmarshal(data, &cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, camera := range cfg.Cameras {
+		fmt.Println("Camera:", camera.Name, "| Source:", camera.Source)
+	}
 }

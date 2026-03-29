@@ -81,7 +81,7 @@ func readCameraAllEvent(cam string) ([]Records, error) {
 		if !date.IsDir(){
 			continue
 		}
-		path:=fmt.Sprintf("logs/%s/%s",date.Name(),cam)
+		path := fmt.Sprintf("logs/%s/%s.log", date.Name(), cam)
 		if _, err := os.Stat(path); err != nil {
 			continue
 		}
@@ -147,4 +147,30 @@ func ReadEvents(path string) ([]Records, error) {
 	}
 
 	return events, scanner.Err()
+}
+func ShowRecord(date string,cam string) {
+	records,err:=ReadEvent(date,cam)
+	if err!=nil{
+		log.Fatal(records)
+	}
+	if len(records) == 0 {
+		fmt.Println("No records found.")
+		return
+	}
+
+	fmt.Println("------------------------------------------------------------")
+	fmt.Printf("%-12s | %-28s | %-18s | %-10s\n", "CAMERA", "TIME", "EVENT", "CONF")
+	fmt.Println("------------------------------------------------------------")
+
+	for _, r := range records {
+		fmt.Printf("%-12s | %-28s | %-18s | %-10.2f\n",
+			r.Camera,
+			r.Time,
+			r.Event,
+			r.Confidence,
+		)
+	}
+
+	fmt.Println("------------------------------------------------------------")
+	fmt.Printf("Total Records: %d\n", len(records))
 }
