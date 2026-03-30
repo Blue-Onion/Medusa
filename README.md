@@ -36,7 +36,7 @@ Medusa requires Go to be installed on your system.
    ```
 2. Build the executable:
    ```bash
-   go build -o medusa main.go
+   go build -o medusa ./cmd/main.go
    ```
    *(Adjust the build path based on your project's main package location)*
 
@@ -46,17 +46,17 @@ The Medusa CLI provides several commands to manage and query the platform:
 
 - **Start the pipeline:**
   ```bash
-  medusa start
+  ./medusa start
   ```
 
 - **View the current configuration:**
   ```bash
-  medusa show-config
+  ./medusa show-config
   ```
 
 - **Query logged events by date and camera:**
   ```bash
-  medusa show-record --date 2026-03-30 --cam cam1
+  ./medusa show-record --date 2026-03-30 --cam cam1
   ```
 
 ## Log Storage Structure
@@ -86,7 +86,7 @@ Example `.log` file contents:
 
 When using the `show-record` CLI command, Medusa parses the raw JSON logs and presents them in a readable tabular format.
 
-Example output for `medusa show-record --date 2026-03-30 --cam cam2`:
+Example output for `./medusa show-record --date 2026-03-30 --cam cam2`:
 
 ```text
 +--------+-----------------------------------+----------------+------------+
@@ -130,4 +130,4 @@ The pipeline architecture relies on **modular detection integration**. You can s
 
 ## License
 
-Licensed under the MIT License.
+[MIT License](LICENSE) 
