@@ -1,6 +1,6 @@
 cameras:
   - name: cam1
-    source: "video.mp4"
+    source: 0
   - name: cam2
     source: "video2.mp4"
   - name: cam3

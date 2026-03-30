@@ -33,7 +33,7 @@ func StartCameraWork(cfg *config.Config) {
 }
 
 func streamEvent(camera config.Camera) (<-chan config.Event, error) {
-	cmd := exec.Command("python3", "Pycode/main.py", fmt.Sprintf("%v", camera.Source), camera.Name)
+	cmd := exec.Command("python3", "DetectionSoftware/main.py", fmt.Sprintf("%v", camera.Source), camera.Name)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
