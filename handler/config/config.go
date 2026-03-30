@@ -12,7 +12,7 @@ import (
 
 type Camera struct {
 	Name string `yaml:"name"`
-	Source  string `yaml:"soruce"`
+	Source  string `yaml:"source"`
 }
 type Config struct {
 	Cameras []Camera
