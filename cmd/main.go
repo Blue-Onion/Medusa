@@ -9,8 +9,8 @@ import (
 	camera "github.com/Blue-Onion/MahilAi/handler/Camera"
 	record "github.com/Blue-Onion/MahilAi/handler/Record"
 	"github.com/Blue-Onion/MahilAi/handler/config"
+	"github.com/Blue-Onion/MahilAi/handler/csv"
 )
-
 
 func main() {
 	cfg, err := config.LoadConfig()
@@ -42,10 +42,16 @@ func main() {
 		date := showRecordCmd.String("date", "", "Date in format YYYY-MM-DD")
 		cam := showRecordCmd.String("cam", "", "Camera name")
 
-
 		showRecordCmd.Parse(os.Args[2:])
 
 		record.ShowRecord(*date, *cam)
+	case "download":
+		downloadCsv := flag.NewFlagSet("show-record", flag.ExitOnError)
+
+		date := downloadCsv.String("date", "", "Date in format YYYY-MM-DD")
+		cam := downloadCsv.String("cam", "", "Camera name")
+		downloadCsv.Parse(os.Args[2:])
+		csv.ExportToCsv(*date, *cam)
 
 	default:
 		fmt.Println("Unknown command:", command)
