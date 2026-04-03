@@ -30,13 +30,12 @@ func main() {
 
 	case "start":
 		log.Print("Config loaded. Starting camera work...")
-		fpsMode := flag.NewFlagSet("show-record", flag.ExitOnError)
-		
+		fpsMode := flag.NewFlagSet("start", flag.ExitOnError)
+
 		mode := fpsMode.String("m", "", "mode")
-	
-		
-		fpsMode.Parse(os.Args[1:])
-		camera.StartCameraWork(cfg,*mode)
+
+		fpsMode.Parse(os.Args[2:])
+		camera.StartCameraWork(cfg, *mode)
 
 	case "show-config":
 		config.ShowConfig()

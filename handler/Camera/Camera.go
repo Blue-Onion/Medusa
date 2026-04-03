@@ -29,6 +29,7 @@ func StartCameraWork(cfg *config.Config, mode string) {
 		log.Fatal("Invalid flag")
 	}
 	fps := cfg.Fps[mode]
+
 	for _, val := range cfg.Cameras {
 		ch, err := streamEvent(val, fps)
 		if err != nil {
@@ -45,6 +46,7 @@ func StartCameraWork(cfg *config.Config, mode string) {
 }
 
 func streamEvent(camera config.Camera, fps string) (<-chan config.Event, error) {
+
 	cmd := exec.Command("python3", "DetectionSoftware/main.py", fmt.Sprintf("%v", camera.Source), camera.Name, fps)
 
 	stdout, err := cmd.StdoutPipe()
