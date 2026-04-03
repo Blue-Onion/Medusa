@@ -30,11 +30,16 @@ func main() {
 
 	case "start":
 		log.Print("Config loaded. Starting camera work...")
-		camera.StartCameraWork(cfg)
+		fpsMode := flag.NewFlagSet("show-record", flag.ExitOnError)
+		
+		mode := fpsMode.String("m", "", "mode")
+	
+		
+		fpsMode.Parse(os.Args[1:])
+		camera.StartCameraWork(cfg,*mode)
 
 	case "show-config":
 		config.ShowConfig()
-
 	case "show-record":
 
 		showRecordCmd := flag.NewFlagSet("show-record", flag.ExitOnError)
@@ -43,7 +48,6 @@ func main() {
 		cam := showRecordCmd.String("cam", "", "Camera name")
 
 		showRecordCmd.Parse(os.Args[2:])
-
 		record.ShowRecord(*date, *cam)
 	case "download":
 		downloadCsv := flag.NewFlagSet("show-record", flag.ExitOnError)
