@@ -69,61 +69,64 @@ func ReadEvent(date string, cam string) ([]Records, error) {
 	if date != "" && cam == "" {
 		return readDateAllEvent(date)
 	}
-	return nil, fmt.Errorf("date and cam both empty")
+	if date=="" &&cam==""{
+		return readAllEvents()
+	}
+	return nil, fmt.Errorf("Wtf man?")
 }
 func readCameraAllEvent(cam string) ([]Records, error) {
 	var res []Records
-	dates,err:=os.ReadDir("logs")
-	if err!=nil{
-		return nil,err
+	dates, err := os.ReadDir("logs")
+	if err != nil {
+		return nil, err
 	}
-	for _,date:=range dates{
-		if !date.IsDir(){
+	for _, date := range dates {
+		if !date.IsDir() {
 			continue
 		}
 		path := fmt.Sprintf("logs/%s/%s.log", date.Name(), cam)
 		if _, err := os.Stat(path); err != nil {
 			continue
 		}
-		event,err:=ReadEvents(path)
-		if err!=nil{
-			return nil,err
+		event, err := ReadEvents(path)
+		if err != nil {
+			return nil, err
 		}
 		res = append(res, event...)
 	}
-	return res,nil
-	
+	return res, nil
+
 }
 func readDateAllEvent(date string) ([]Records, error) {
-	path:=fmt.Sprintf("logs/%s",date)
-	files,err:=os.ReadDir(path)
-	if err!=nil{
-		return nil,err
+	path := fmt.Sprintf("logs/%s", date)
+	files, err := os.ReadDir(path)
+	if err != nil {
+		return nil, err
 	}
 	var res []Records
-	for _,f:=range files{
-		if f.IsDir(){
+	for _, f := range files {
+		if f.IsDir() {
 			continue
 		}
-		filePath:=fmt.Sprintf("%s/%s",path,f.Name())
+		filePath := fmt.Sprintf("%s/%s", path, f.Name())
 		fmt.Println(filePath)
-		event,err:=ReadEvents(filePath)
-		if err!=nil{
+		event, err := ReadEvents(filePath)
+		if err != nil {
 			continue
 		}
-		res=append(res, event...)
+		res = append(res, event...)
 
 	}
-	return res,nil
+	return res, nil
 
 }
 func camDateEvent(date string, cam string) ([]Records, error) {
-	path:=fmt.Sprintf("logs/%s/%s.log",date,cam)
-	res,err:=ReadEvents(path)
-	if err!=nil{
-		return nil,err
+	path := fmt.Sprintf("logs/%s/%s.log", date, cam)
+	res, err := ReadEvents(path)
+	if err != nil {
+		return nil, err
 	}
-	return res,nil
+	return res, nil
 }
 func ReadEvents(path string) ([]Records, error) {
 	file, err := os.Open(path)
@@ -149,9 +152,9 @@ func ReadEvents(path string) ([]Records, error) {
 
 	return events, scanner.Err()
 }
-func ShowRecord(date string,cam string) {
-	records,err:=ReadEvent(date,cam)
-	if err!=nil{
+func ShowRecord(date string, cam string) {
+	records, err := ReadEvent(date, cam)
+	if err != nil {
 		log.Fatal(records)
 	}
 	if len(records) == 0 {
@@ -174,4 +177,34 @@ func ShowRecord(date string,cam string) {
 
 	fmt.Println("------------------------------------------------------------")
 	fmt.Printf("Total Records: %d\n", len(records))
+}
+func readAllEvents() ([]Records, error) {
+	res := []Records{}
+	dates,err:=os.ReadDir("logs")
+	if err!=nil{
+		return nil,err
+	}
+	for _,date:=range dates{
+		if !date.IsDir(){
+			continue
+		}
+		filePath:=fmt.Sprintf("logs/%s",date.Name())
+		cams,err:=os.ReadDir(filePath)
+		if err!=nil{
+			return nil,err
+		}
+		for _,cam:=range cams{
+			if cam.IsDir(){
+				continue
+			}
+			path := fmt.Sprintf("%s/%s", filePath, cam.Name())
+			event,err:=ReadEvents(path)
+			if err!=nil{
+				fmt.Println(err.Error())
+				continue
+			}
+			res=append(res,event...)
+		}
+	}
+	return res, nil
 }
