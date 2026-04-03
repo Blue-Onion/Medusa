@@ -8,62 +8,113 @@ Medusa is a multi-camera incident monitoring and event logging platform written 
 - **Flexible Stream Support**: Configure inputs from webcam devices, local video files, and RTSP streams.
 - **Pluggable Detection Architecture**: Integrate any external detection software (interchangeable with your choice of detection models/engines) via standard output event emitting.
 - **Structured JSON Logging**: All events are persisted as JSON Lines (JSONL), making them easy to parse and query.
-- **Built-in CLI Tool**: Start the pipeline, view configurations, or query and filter historical logs by date and camera through an intuitive command-line interface.
+- **Built-in CLI Tool**: Start the pipeline, view configurations, query historical logs, and export events to CSV.
+
+## Prerequisites
+
+- **Go**: Version 1.21 or higher (Check with `go version`).
+- **Python**: Version 3.8 or higher (Check with `python3 --version`).
+- **Python Dependencies**: `ultralytics` and `opencv-python`.
+
+## Setup Guide
+
+### 1. Python Environment (Detection Engine)
+
+The default detection engine is based on YOLOv8.
+
+```bash
+# Navigate to detection directory
+cd DetectionSoftware
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Or if using a virtual environment (recommended)
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Return to root directory
+cd ..
+```
+
+### 2. Medusa Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/medusa.git
+cd medusa
+
+# Build the executable
+go build -o medusa ./cmd/main.go
+```
 
 ## Configuration
 
-Cameras are configured using a `config.yaml` file. Medusa supports webcam indices, local files, and RTSP streams.
+Medusa is configured via `config.yaml`. This file defines camera sources, log paths, and FPS presets.
 
-Sample `config.yaml`:
+### `config.yaml` Structure
+
 ```yaml
 cameras:
   - name: cam1
-    source: "0"
+    source: 0       # Webcam index (numeric)
   - name: cam2
-    source: "video2.mp4"
+    source: "video.mp4" # Local video file
   - name: cam3
-    source: "rtsp://admin:pass@192.168.1.20:554/stream"
+    source: "rtsp://admin:pass@192.168.1.20:554/stream" # RTSP stream
+
+# Directory where JSONL logs will be stored
+recordsPath: "logs"
+
+# FPS Presets for the detection engine
+fps:
+  low: "2"    # 2 Frames Per Second
+  medium: "5"  # 5 Frames Per Second
+  high: "15"   # 15 Frames Per Second
 ```
-
-## Installation
-
-Medusa requires Go to be installed on your system.
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/medusa.git
-   cd medusa
-   ```
-2. Build the executable:
-   ```bash
-   go build -o medusa ./cmd/main.go
-   ```
-   *(Adjust the build path based on your project's main package location)*
 
 ## CLI Usage
 
-The Medusa CLI provides several commands to manage and query the platform:
+### Start Processing
 
-- **Start the pipeline:**
-  ```bash
-  ./medusa start
-  ```
+Start the monitoring pipeline for all configured cameras.
 
-- **View the current configuration:**
-  ```bash
-  ./medusa show-config
-  ```
+```bash
+./medusa start [-m mode]
+```
 
-- **Query logged events by date and camera:**
-  ```bash
-  ./medusa show-record --date 2026-03-30 --cam cam1
-  ```
+- `-m`: (Optional) FPS mode. Options: `low`, `medium`, `high`. Defaults to `medium` if not specified.
+
+### View Configuration
+
+Display the loaded camera and system configurations.
+
+```bash
+./medusa show-config
+```
+
+### Query Logs
+
+Search for recorded events by date and camera name.
+
+```bash
+./medusa show-record --date YYYY-MM-DD [--cam camera_name]
+```
+
+### Export to CSV
+
+Export events to a CSV file for external analysis.
+
+```bash
+./medusa download --date YYYY-MM-DD [--cam camera_name]
+```
 
 ## Log Storage Structure
 
-Logs are organized hierarchically by date and camera name, ensuring easy file rotation and fast querying. Each active day generates a new folder, and each camera gets its own dedicated log file.
+Logs are organized hierarchically by date and camera name.
 
-```
+```text
 logs/
 └── YYYY-MM-DD/
     ├── cam1.log
@@ -71,63 +122,16 @@ logs/
     └── cam3.log
 ```
 
-## Log Format
-
-All logs are stored in the JSON Lines (JSONL) format. Each line represents a single discrete event emitted by the underlying detection software.
-
-Example `.log` file contents:
-```json
-{"camera":"cam2","time":"2026-03-30T08:09:14.84747219+05:30","event":"Human Detected","confidence":0.2504044771194458}
-{"camera":"cam2","time":"2026-03-30T08:09:15.48450303+05:30","event":"Human Detected","confidence":0.31269264221191406}
-{"camera":"cam2","time":"2026-03-30T08:09:15.5109272+05:30","event":"Human Detected","confidence":0.30127766728401184}
-```
-
-## Query Output Example
-
-When using the `show-record` CLI command, Medusa parses the raw JSON logs and presents them in a readable tabular format.
-
-Example output for `./medusa show-record --date 2026-03-30 --cam cam2`:
-
-```text
-+--------+-----------------------------------+----------------+------------+
-| CAMERA | TIME                              | EVENT          | CONFIDENCE |
-+--------+-----------------------------------+----------------+------------+
-| cam2   | 2026-03-30T08:09:14.84747219+05:30| Human Detected | 0.2504     |
-| cam2   | 2026-03-30T08:09:15.48450303+05:30| Human Detected | 0.3127     |
-| cam2   | 2026-03-30T08:09:15.5109272+05:30 | Human Detected | 0.3013     |
-+--------+-----------------------------------+----------------+------------+
-```
-
 ## Architecture
 
-Medusa is fundamentally designed as an **event pipeline**. It cleanly separates the concerns of stream concurrency, application life-cycle, and data persistence from the heavy computational lifting of computer vision and machine learning models.
-
-The pipeline architecture relies on **modular detection integration**. You can swap out the underlying detection software (e.g., Python scripts using YOLO, MediaPipe, etc.) without modifying the Go backend. As long as the detection module can process a stream and emit structured JSON to its standard output, Medusa can consume, distribute, log, and query those events effectively.
-
-### Flow Diagram
+Medusa acts as an orchestrator. It spawns an isolated Python process (the detection software) for each camera. The Go backend captures the `stdout` of these processes, parses the JSON events, and persists them to the filesystem.
 
 ```text
-+-----------+       +-------------------+       +---------+       +----------+       +-----------+
-|           |       |                   |       |         |       |          |       |           |
-|  Camera   | ----> | Detection Software| ----> |  Event  | ----> |  Logger  | <---- | Query CLI |
-| (Source)  |       | (Python/AI Model) |       | (JSON)  |       | (JSONL)  |       | (medusa)  |
-|           |       |                   |       |         |       |          |       |           |
-+-----------+       +-------------------+       +---------+       +----------+       +-----------+
+Camera Source -> [ Go Routine ] -> [ Python Process ] -> [ JSON Event ] -> [ Go Logger ] -> FileSystem
 ```
 
-1. **Camera**: Go routines provision and track individual video sources (webcam, file, RTSP).
-2. **Detection Software**: An isolated external process is spawned per camera to analyze the visual input.
-3. **Event**: The detection model outputs discrete incident data (threats/events) in real-time.
-4. **Logger**: Medusa safely captures the parallel standard output strings, appending them to the appropriately dated and named log files.
-5. **Query CLI**: Users natively interface with the aggregated log records via the Go CLI tool.
-
-## Future Improvements
-
-- Implementation of real-time alerts (e.g., Webhooks, Slack/Discord integration).
-- Relational or NoSQL database support (PostgreSQL, MongoDB) as an alternative to local JSONL logs.
-- Built-in web dashboard for live monitoring and interactive log visualization.
-- Configuration hot-reloading to apply new detection rules without disrupting active streams.
+For detailed information on the detection engine, see [DetectionSoftware/README.md](DetectionSoftware/README.md).
 
 ## License
 
-[MIT License](LICENSE) 
+[MIT License](LICENSE)
