@@ -4,21 +4,34 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os/exec"
+	"strings"
 	"sync"
 
 	record "github.com/Blue-Onion/MahilAi/handler/Record"
 	"github.com/Blue-Onion/MahilAi/handler/config"
 )
 
-
-
-func StartCameraWork(cfg *config.Config) {
+func StartCameraWork(cfg *config.Config, mode string) {
 
 	var channels []<-chan config.Event
+	switch strings.ToLower(mode) {
+	case "":
+		mode = "medium"
+	case "m":
+		mode = "medium"
+	case "l":
+		mode = "low"
+	case "h":
+		mode = "high"
+	default:
+		log.Fatal("Invalid flag")
+	}
+	fps := cfg.Fps[mode]
 
 	for _, val := range cfg.Cameras {
-		ch, err := streamEvent(val)
+		ch, err := streamEvent(val, fps)
 		if err != nil {
 			panic(err)
 		}
@@ -32,8 +45,9 @@ func StartCameraWork(cfg *config.Config) {
 	}
 }
 
-func streamEvent(camera config.Camera) (<-chan config.Event, error) {
-	cmd := exec.Command("python3", "DetectionSoftware/main.py", fmt.Sprintf("%v", camera.Source), camera.Name)
+func streamEvent(camera config.Camera, fps string) (<-chan config.Event, error) {
+
+	cmd := exec.Command("python3", "DetectionSoftware/main.py", fmt.Sprintf("%v", camera.Source), camera.Name, fps)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {

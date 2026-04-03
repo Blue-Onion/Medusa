@@ -4,7 +4,7 @@ import time
 from ultralytics import YOLO
 import cv2
 
-def run_detector(source, camera_name):
+def run_detector(source, camera_name, target_fps=None):
     # Load YOLO model
     model = YOLO("yolov8n.pt") 
     
@@ -18,11 +18,19 @@ def run_detector(source, camera_name):
         print(f"Error: Could not open video source {source}", file=sys.stderr)
         return
 
+    last_frame_time = 0
     try:
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
+            
+            # FPS throttling
+            if target_fps is not None and target_fps > 0:
+                current_time = time.time()
+                if (current_time - last_frame_time) < (1.0 / target_fps):
+                    continue
+                last_frame_time = current_time
 
             # Run detection
             results = model(frame, verbose=False)
@@ -47,10 +55,17 @@ def run_detector(source, camera_name):
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Usage: python main.py <source> <camera_name>", file=sys.stderr)
+        print("Usage: python main.py <source> <camera_name> [fps]", file=sys.stderr)
         sys.exit(1)
 
     source_arg = sys.argv[1]
     name_arg = sys.argv[2]
     
-    run_detector(source_arg, name_arg)
+    fps_arg = None
+    if len(sys.argv) >= 4:
+        try:
+            fps_arg = float(sys.argv[3])
+        except ValueError:
+            print("Warning: Invalid fps value provided.", file=sys.stderr)
+    
+    run_detector(source_arg, name_arg, fps_arg)
