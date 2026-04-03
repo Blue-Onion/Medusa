@@ -18,10 +18,16 @@ type Records struct {
 	Event      string  `json:"event"`
 	Confidence float64 `json:"confidence"`
 }
-
+func GetFilePath()string{
+	config,err:=config.LoadConfig()
+	if err!=nil{
+		log.Fatal(err.Error())
+	}
+	return config.RecordsPath
+}
 func WriteEvent(event *config.Event) {
 	name := event.Camera
-
+	recordPath:=GetFilePath()
 	sec := int64(event.Time)
 	nsec := int64((event.Time - float64(sec)) * 1e9)
 
@@ -29,7 +35,7 @@ func WriteEvent(event *config.Event) {
 
 	today := parsedTime.Format("2006-01-02")
 
-	folderPath := fmt.Sprintf("logs/%s", today)
+	folderPath := fmt.Sprintf("%s/%s", recordPath,today)
 	err := os.MkdirAll(folderPath, os.ModePerm)
 	if err != nil {
 		log.Println(err)
@@ -75,8 +81,9 @@ func ReadEvent(date string, cam string) ([]Records, error) {
 	return nil, fmt.Errorf("Wtf man?")
 }
 func readCameraAllEvent(cam string) ([]Records, error) {
+	recordPath:=GetFilePath()
 	var res []Records
-	dates, err := os.ReadDir("logs")
+	dates, err := os.ReadDir(recordPath)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +91,7 @@ func readCameraAllEvent(cam string) ([]Records, error) {
 		if !date.IsDir() {
 			continue
 		}
-		path := fmt.Sprintf("logs/%s/%s.log", date.Name(), cam)
+		path := fmt.Sprintf("%s/%s/%s.log", recordPath,date.Name(), cam)
 		if _, err := os.Stat(path); err != nil {
 			continue
 		}
@@ -98,7 +105,8 @@ func readCameraAllEvent(cam string) ([]Records, error) {
 
 }
 func readDateAllEvent(date string) ([]Records, error) {
-	path := fmt.Sprintf("logs/%s", date)
+	recordPath:=GetFilePath()
+	path := fmt.Sprintf("%s/%s",recordPath, date)
 	files, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
@@ -121,7 +129,8 @@ func readDateAllEvent(date string) ([]Records, error) {
 
 }
 func camDateEvent(date string, cam string) ([]Records, error) {
-	path := fmt.Sprintf("logs/%s/%s.log", date, cam)
+	recordPath:=GetFilePath()
+	path := fmt.Sprintf("%s/%s/%s.log", recordPath,date, cam)
 	res, err := ReadEvents(path)
 	if err != nil {
 		return nil, err
@@ -180,7 +189,8 @@ func ShowRecord(date string, cam string) {
 }
 func readAllEvents() ([]Records, error) {
 	res := []Records{}
-	dates,err:=os.ReadDir("logs")
+	recordPath:=GetFilePath()
+	dates,err:=os.ReadDir(recordPath)
 	if err!=nil{
 		return nil,err
 	}
@@ -188,7 +198,7 @@ func readAllEvents() ([]Records, error) {
 		if !date.IsDir(){
 			continue
 		}
-		filePath:=fmt.Sprintf("logs/%s",date.Name())
+		filePath:=fmt.Sprintf("%s/%s",recordPath,date.Name())
 		cams,err:=os.ReadDir(filePath)
 		if err!=nil{
 			return nil,err
