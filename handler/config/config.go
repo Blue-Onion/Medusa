@@ -27,21 +27,20 @@ type Event struct {
 
 func CreateDefaultConfig() error {
 	defaultConfig := `cameras:
-	- name: cam1
-	  source: 0   
-	- name: cam2
-	  source: "video.mp4"
-	- name: cam3
-	  source: "rtsp://admin:pass@192.168.1.20:554/stream"
-  
-  recordsPath: "logs"
-  
-  fps:
-	low: "2"
-	medium: "5"
-	high: "10"
-`
+  - name: cam1
+    source: "0"
+  - name: cam2
+    source: "video.mp4"
+  - name: cam3
+    source: "rtsp://admin:pass@192.168.1.20:554/stream"
 
+recordsPath: "logs"
+
+fps:
+  low: "2"
+  medium: "5"
+  high: "10"
+`
 	return os.WriteFile("config.yaml", []byte(defaultConfig), 0644)
 }
 func CheckConfigFile() bool {

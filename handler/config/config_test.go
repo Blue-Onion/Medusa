@@ -6,8 +6,8 @@ import (
 )
 
 func TestConfigLifecycle(t *testing.T) {
-	// Setup a clean directory for testing to prevent modifying the actual config.yaml
 	tempDir := t.TempDir()
+
 	originalDir, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("Failed to get current directory: %v", err)
@@ -18,37 +18,56 @@ func TestConfigLifecycle(t *testing.T) {
 		t.Fatalf("Failed to change directory to temp dir: %v", err)
 	}
 
-	// 1. CheckConfigFile should be false initially because there's no config.yaml
+	// 1. config.yaml should not exist initially
 	if CheckConfigFile() {
-		t.Error("CheckConfigFile should return false when no config.yaml exists")
+		t.Fatal("CheckConfigFile should return false when config.yaml does not exist")
 	}
 
-	// 2. LoadConfig should create the default config since it's missing, and then return it
+	// 2. LoadConfig should create default config.yaml
 	cfg, err := LoadConfig()
 	if err != nil {
 		t.Fatalf("LoadConfig failed: %v", err)
 	}
 
-	if len(cfg.Cameras) == 0 {
-		t.Fatalf("Expected at least 1 camera in default config")
+	// 3. config.yaml should exist now
+	if !CheckConfigFile() {
+		t.Fatal("CheckConfigFile should return true after default config.yaml is created")
+	}
+
+	// 4. Check cameras
+	if len(cfg.Cameras) != 3 {
+		t.Fatalf("Expected 3 cameras in default config, got %d", len(cfg.Cameras))
 	}
 
 	if cfg.Cameras[0].Name != "cam1" {
-		t.Errorf("Expected first camera name to be 'cam1', got '%s'", cfg.Cameras[0].Name)
+		t.Errorf("Expected first camera name 'cam1', got '%s'", cfg.Cameras[0].Name)
 	}
 
-	// 3. CheckConfigFile should now be true
-	if !CheckConfigFile() {
-		t.Error("CheckConfigFile should return true after LoadConfig creates default config")
+	// 5. Check RecordsPath
+	if cfg.RecordsPath != "logs" {
+		t.Errorf("Expected RecordsPath to be 'logs', got '%s'", cfg.RecordsPath)
 	}
 
-	// 4. ReadConfig should now work independently
+	// 6. Check FPS values
+	if cfg.Fps["low"] != "2" {
+		t.Errorf("Expected fps low to be '2', got '%s'", cfg.Fps["low"])
+	}
+
+	if cfg.Fps["medium"] != "5" {
+		t.Errorf("Expected fps medium to be '5', got '%s'", cfg.Fps["medium"])
+	}
+
+	if cfg.Fps["high"] != "10" {
+		t.Errorf("Expected fps high to be '10', got '%s'", cfg.Fps["high"])
+	}
+
+	// 7. ReadConfig should also work
 	cfg2, err := ReadConfig()
 	if err != nil {
 		t.Fatalf("ReadConfig failed: %v", err)
 	}
 
-	if len(cfg2.Cameras) == 0 {
-		t.Fatalf("Expected at least 1 camera in read config")
+	if cfg2.RecordsPath != "logs" {
+		t.Errorf("Expected RecordsPath from ReadConfig to be 'logs', got '%s'", cfg2.RecordsPath)
 	}
 }
