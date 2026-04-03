@@ -31,3 +31,4 @@ Mood.txt
 video.mp4
 logs/
 config.yaml
+*.csv

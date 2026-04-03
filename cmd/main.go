@@ -51,7 +51,7 @@ func main() {
 		date := downloadCsv.String("date", "", "Date in format YYYY-MM-DD")
 		cam := downloadCsv.String("cam", "", "Camera name")
 		downloadCsv.Parse(os.Args[2:])
-		csv.DownloadCsv(*date, *cam)
+		csv.ExportToCsv(*date, *cam)
 
 	default:
 		fmt.Println("Unknown command:", command)
